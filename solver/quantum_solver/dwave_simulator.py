@@ -38,6 +38,10 @@ class DwaveSimulator:
             H += J * op
 
         return H
+# H = Σ h_i · σ_z^i + Σ J_ij · σ_z^i · σ_z^j
+# h_i = le champ sur le qubit i (terme linéaire)
+#J_ij = l'interaction entre les qubits i et j (terme quadratique)
+#σ_z = la matrice [[1,0],[0,-1]]
 
     def build_Hinit(self, n):
         # H_init = somme des sigma_x sur chaque qubit
@@ -127,12 +131,12 @@ class DwaveSimulator:
         return g_min
 
 # test rapide
-#if __name__ == "__main__":
- #   sim = DwaveSimulator()
- #   ising = {
- #       'linear':    {0: -1.0, 1: 0.5, 2: -0.8},
- #       'quadratic': {(0,1): 0.5, (1,2): -0.4}
- #   }
- #   eigs = sim.simulate_evolution(ising, nb_eigenvalues=3)
- #   sim.plot_eigenvalues(eigs)
- #   sim.plot_spectral_gap(eigs)
+if __name__ == "__main__":
+    sim = DwaveSimulator()
+    ising = {
+        'linear':    {0: -1.0, 1: 0.5, 2: -0.8},
+        'quadratic': {(0,1): 0.5, (1,2): -0.4}
+    }
+    eigs = sim.simulate_evolution(ising, nb_eigenvalues=3)
+    sim.plot_eigenvalues(eigs)
+    sim.plot_spectral_gap(eigs)
