@@ -12,11 +12,11 @@ class DwaveSimulator:
             'B': [s/100 for s in range(101)]
         }
 
-    def build_Hfinal(self, ising_problem):
+    def build_Hfinal(self, h, J):
         # Encode le problème Ising en matrice 2^n x 2^n
         # Chaque variable s_i → sigma_z à la position i (produits tensoriels)
-        linear    = ising_problem['linear']
-        quadratic = ising_problem['quadratic']
+        linear    = h
+        quadratic = J
         n = len(linear)
 
         sigma_z = np.array([[1, 0], [0, -1]])
@@ -54,12 +54,12 @@ class DwaveSimulator:
 
         return H
 
-    def simulate_evolution(self, ising_problem, nb_eigenvalues=3):
+    def simulate_evolution(self, h, J, nb_eigenvalues=3):
         # À chaque pas s : H(s) = A(s)*H_init + B(s)*H_final
         # On diagonalise H(s) et on garde les nb_eigenvalues plus basses énergies
-        n       = len(ising_problem['linear'])
+        n       = len(h)
         H_init  = self.build_Hinit(n)
-        H_final = self.build_Hfinal(ising_problem)
+        H_final = self.build_Hfinal(h, J)
 
         all_eigenvalues = []
 
@@ -74,7 +74,14 @@ class DwaveSimulator:
 
         return np.array(all_eigenvalues)  # shape : (101, nb_eigenvalues)
 
-    # ── TODO 5 ────────────────────────────────────────────────────────────────
+    def get_ground_state(self, h, J):
+        """
+        Retourne l'énergie et le vecteur propre du ground state de H_final.
+        Returns: (gs_energy, gs_vec)
+        """
+        H_final = self.build_Hfinal(h, J)
+        eigenvalues, eigenvectors = np.linalg.eigh(H_final)
+        return eigenvalues[0], eigenvectors[:, 0]
 
     def plot_eigenvalues(self, all_eigenvalues):
         """
