@@ -21,9 +21,9 @@ class QAOALocalOptimizer:
         for i in range(n):
             qc.h(i)
         all_params = []
-        for _ in range(p):
-            qc, gammas = add_ising_problem_ham(qc, problem, n)
-            qc, betas  = add_ising_mixer_ham(qc, problem, n)
+        for layer in range(p):
+            qc, gammas = add_ising_problem_ham(qc, problem, n, layer=layer)
+            qc, betas  = add_ising_mixer_ham(qc, problem, n, layer=layer)
             all_params += gammas + betas
         qc.measure(range(n), range(n))
         return qc, all_params
@@ -59,17 +59,14 @@ class QAOALocalOptimizer:
     def optimize(self, problem, p):
         qc, _ = self._build_circuit(problem, p)
         best_solution = [None]
-        best_counts   = [None]
 
         def objective(angles):
-            # Pénalité si les angles sortent des bornes
             for k in range(p):
                 if not (self.gamma_bounds[0] <= angles[2*k]   <= self.gamma_bounds[1]):
                     return 1e6
                 if not (self.beta_bounds[0]  <= angles[2*k+1] <= self.beta_bounds[1]):
                     return 1e6
             counts = self._run_circuit(angles, qc)
-            best_counts[0] = counts
             total = sum(counts.values())
             exp = 0
             for bitstring, count in counts.items():
