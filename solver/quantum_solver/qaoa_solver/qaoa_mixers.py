@@ -23,3 +23,29 @@ def add_ising_mixer_ham(qc, ising_problem, n, layer=0):
         qc.rx(2 * betas[0], i)
 
     return qc, list(betas)
+
+def add_mis_mixer_ham(qc, graph_edges, n, layer=0):
+    """
+    Mixer spécifique pour le problème MIS.
+    Applique une rotation conditionnelle : on ne peut "activer" un noeud
+    que si aucun de ses voisins n'est actif.
+    """
+    betas = ParameterVector(f'beta_mis_{layer}', 1)
+    
+    for i in range(n):
+        # Récupère les voisins du noeud i
+        neighbors = [j for (u, v) in graph_edges if (u == i and (j := v)) or (v == i and (j := u))]
+        
+        if not neighbors:
+            qc.rx(2 * betas[0], i)
+        else:
+            # Applique Rx conditionnel : actif seulement si tous les voisins sont à 0
+            for neighbor in neighbors:
+                qc.x(neighbor)
+            qc.mcx(neighbors, i)  # multi-controlled X
+            qc.rx(2 * betas[0], i)
+            qc.mcx(neighbors, i)
+            for neighbor in neighbors:
+                qc.x(neighbor)
+    
+    return qc, list(betas)
