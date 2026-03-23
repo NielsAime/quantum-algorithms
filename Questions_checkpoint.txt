@@ -1,0 +1,28 @@
+Question 1  : In your QAOA for the MIS, you do a rotation on your qubit if it does not have a neighbor. Why ? Is there a better solution than doing that ? I think that there is also a small problem in your conditional Rx rotation.
+
+The rotation of the qubit without neighboor was actually a mistake from what we understand. Isolated nodes are always valid members of the MIS, so we fix them to |1> with an X gate at layer 0 and never mix them afterwards. Applying a free Rx rotation on them (old behavior) was incorrect because it would put them in superposition and let them collapse to |0> at measurement.
+
+For nodes with neighbors: we apply a multi-controlled Rx gate.
+The correct construction is:
+   1. X on each neighbor  (flip |0> to |1> so the MCRx fires when neighbors were |0>)
+   2. MCRx(2*beta, neighbors to i)  (rotate i only when all controls are |1>)
+   3. X on each neighbor  (unflip)
+
+
+
+Question 2 :  In your circuit instance corresponding to the max-cut  problem, I do not understand why you have single Rz        rotations at the beginning of your circuit (see.           qaoa_test_max_cut.ipynb execution of cell 3) 
+
+C'était effectivement un problème, venant de add_ising_problem_ham. Le code itère ensuite sur tous les termes du maxcut sans vérifier les valeurs, et prend donc en compte les termes linéaires à 0. Il ajoutait donc des portes quand même. Ce sont ces Rz(0) qui apparaissaient dans le dessin du circuit.
+
+
+
+
+Question 3 :  When you run a quantum circuit in general, be aware that the list of returned qubits by the .result().get_counts() is in little-endian convention. For example, if the bitstring returned is 0001, the first qubit is at the most right of the string (state 1). I think you do not handle this case in your code (at least in your qaoa notebook).
+
+Corrections effectuées — convention little-endian Qiskit                     
+
+Qiskit retourne les bitstrings en convention little-endian : dans la chaîne '01001', le bit le plus à droite correspond au qubit 0. Le code précédent itérait le bitstring de gauche à droite, inversant ainsi l'index des qubits lors du calcul du coût Ising. Donc on a inversé. 
+
+
+
+

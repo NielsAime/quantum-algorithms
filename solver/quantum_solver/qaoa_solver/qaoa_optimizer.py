@@ -39,7 +39,7 @@ class QAOALocalOptimizer:
         total_shots = sum(counts.values())
         expectation = 0
         for bitstring, count in counts.items():
-            spins = [1 if b == '1' else -1 for b in bitstring]
+            spins = [1 if b == '1' else -1 for b in bitstring[::-1]]
             cost = 0
             for (i, j), J in problem['quadratic'].items():
                 cost += J * spins[i] * spins[j]
@@ -48,12 +48,17 @@ class QAOALocalOptimizer:
             expectation += cost * count / total_shots
         return expectation
 
+    def ising_cost(self, spins, problem):
+        cost = sum(J * spins[i] * spins[j] for (i, j), J in problem['quadratic'].items())
+        cost += sum(h * spins[i] for i, h in problem['linear'].items())
+        return cost
+
     def run_without_optimization(self, problem, p, angles):
         qc, _ = self._build_circuit(problem, p)
         exp_val = self.get_expectation_value(angles, qc, problem)
         counts = self._run_circuit(angles, qc)
         best_bitstring = max(counts, key=counts.get)
-        best_solution = [1 if b == '1' else -1 for b in best_bitstring]
+        best_solution = [1 if b == '1' else -1 for b in best_bitstring[::-1]]
         return exp_val, best_solution, angles
 
     def optimize(self, problem, p):
@@ -70,7 +75,7 @@ class QAOALocalOptimizer:
             total = sum(counts.values())
             exp = 0
             for bitstring, count in counts.items():
-                spins = [1 if b == '1' else -1 for b in bitstring]
+                spins = [1 if b == '1' else -1 for b in bitstring[::-1]]
                 cost = 0
                 for (i, j), J in problem['quadratic'].items():
                     cost += J * spins[i] * spins[j]
@@ -78,7 +83,7 @@ class QAOALocalOptimizer:
                     cost += h * spins[i]
                 exp += cost * count / total
             best_bs = max(counts, key=counts.get)
-            best_solution[0] = [1 if b == '1' else -1 for b in best_bs]
+            best_solution[0] = [1 if b == '1' else -1 for b in best_bs[::-1]]
             return exp
 
         x0 = np.random.uniform(0, np.pi, 2 * p)
