@@ -3,6 +3,7 @@
 # Q est une matrice triangulaire supérieure (ou symétrique, convertie en interne).
 
 import itertools
+import random
 import numpy as np
 from sympy import symbols, sympify
 
@@ -50,3 +51,23 @@ class QuboProblem:
     def generate_complete_search_space(self):
         for combo in itertools.product([0, 1], repeat=self.n):
             yield {i: v for i, v in enumerate(combo)}
+
+    def gen_neighbor_sol(self, solution):
+        """
+        Generate a neighbor of the given solution by flipping exactly one bit.
+        The bit to flip is chosen uniformly at random among the n variables.
+        For example {0: 0, 1: 1, 2: 1} can become {0: 0, 1: 1, 2: 0} (bit 2 flipped).
+        The original solution dict is not modified.
+
+        Parameters
+        ----------
+        solution : dict {index: 0 or 1}
+
+        Returns
+        -------
+        neighbor : new dict with one bit flipped
+        """
+        neighbor = dict(solution)
+        flip_idx = random.randint(0, self.n - 1)
+        neighbor[flip_idx] = 1 - neighbor[flip_idx]
+        return neighbor
